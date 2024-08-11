@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    # Set up Node.js environment
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '22'
+
+    - name: Install Node.js dependencies
+      run: npm install
+
+    # Set up Python environment
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.12'  # Adjust the version according to your needs
+
+    - name: Install Python dependencies
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+
+    - name: Lint Python
+      run: |
+        source venv/bin/activate
+        flake8 .
+
+    # Run backend service
+    - name: Start Backend Service
+      run: |
+        source venv/bin/activate
+        python app.py &
+      env:
+        FLASK_ENV: testing
+
+    # Run tests
+    - name: Run tests
+      run: npm test
+
+    # Build project
+    - name: Build project
+      run: npm run build
+
+    # Upload production build
+    - name: Upload production build
+      uses: actions/upload-artifact@v3
+      with:
+        name: build
+        path: |
+          frontend/build
