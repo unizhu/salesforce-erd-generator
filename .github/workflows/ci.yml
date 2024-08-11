@@ -1,67 +1,68 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: ['20']
+        python-version: ['3.12']
+
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # Set up Node.js environment
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
+      # Node.js steps
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
 
-    - name: Change to frontend directory
-      run: cd frontend
-      
-    - name: Install Node.js dependencies
-      run: npm install
+      - name: Install Node.js dependencies
+        working-directory: frontend
+        run: npm install
 
-    # Set up Python environment
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.10'  # Adjust the version according to your needs
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
 
-    - name: Install Python dependencies
-      run: |
-        python -m venv venv
-        source venv/bin/activate
-        pip install -r requirements.txt
+      # Python steps
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Lint Python
-      run: |
-        source venv/bin/activate
-        flake8 .
+      - name: Install Python dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
 
-    # Run backend service
-    - name: Start Backend Service
-      run: |
-        source venv/bin/activate
-        python app.py &
-      env:
-        FLASK_ENV: testing
+      - name: Lint Python
+        run: |
+          source venv/bin/activate
+          flake8 .
 
-    # Run tests
-    - name: Run tests
-      run: npm test
+      - name: Run Python tests
+        run: |
+          source venv/bin/activate
+          pytest
 
-    # Build project
-    - name: Build project
-      run: npm run build
-
-    # Upload production build
-    - name: Upload production build
-      uses: actions/upload-artifact@v3
-      with:
-        name: build
-        path: |
-          frontend/build
+      # Deploy
+      - name: Deploy backend and frontend
+        run: |
+          # Ensure backend is running on port 8082
+          nohup python app.py &
+          # Frontend files are already built in the 'frontend/build' directory
+          # You can serve them using a tool like 'serve' or move them to a web server
+          npm install -g serve
+          serve -s frontend/build -l 3000 &
