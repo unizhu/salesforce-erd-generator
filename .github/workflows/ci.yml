@@ -17,8 +17,11 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '22'
+        node-version: '20'
 
+    - name: Change to frontend directory
+      run: cd frontend
+      
     - name: Install Node.js dependencies
       run: npm install
 
@@ -26,7 +29,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version: '3.12'  # Adjust the version according to your needs
+        python-version: '3.10'  # Adjust the version according to your needs
 
     - name: Install Python dependencies
       run: |
