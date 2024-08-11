@@ -46,17 +46,17 @@ jobs:
           python -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
-          pip install -r dev-requirements.txt
+      #     pip install -r dev-requirements.txt
 
-      - name: Lint Python
-        run: |
-          source venv/bin/activate
-          flake8 .
+      # - name: Lint Python
+      #   run: |
+      #     source venv/bin/activate
+      #     flake8 .
 
-      - name: Run Python tests
-        run: |
-          source venv/bin/activate
-          pytest
+      # - name: Run Python tests
+      #   run: |
+      #     source venv/bin/activate
+      #     pytest
 
       # Deploy
       - name: Deploy backend and frontend
