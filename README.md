@@ -20,6 +20,7 @@ This repo is a web-based application built with Flask for the backend and React 
     - [Backend (Flask)](#backend-flask)
     - [Frontend (Optional) For Development](#frontend-optional-for-development)
     - [Usage](#usage)
+    - [Use Docker](#use-docker)
     - [Logging In](#logging-in)
     - [Generating ER Diagrams](#generating-er-diagrams)
   - [Screenshot](#screenshot)
@@ -101,6 +102,21 @@ Access the application in your web browser by navigating to:
     http://localhost:8082
 ```
 
+### Use Docker
+
+1. Pull & Run the Docker Image:
+
+    ```bash
+        docker pull unizhu/salesforce-erd-generator
+        docker run -p 8082:8082 unizhu/salesforce-erd-generator
+    ```
+
+2. Access the application in your web browser by navigating to:
+
+    ```bash
+        http://localhost:8082
+    ```
+
 ### Logging In
 
 - Select your Salesforce environment (Production, Sandbox, Custom).
@@ -122,6 +138,7 @@ Access the application in your web browser by navigating to:
 
 - [ ] Add support for oAuth Login.
 - [ ] Automatically re-generate ERD when fields limit is changed.
+- [ ] Fix Add Custom Object/Field with undo/redo bugs.
 
 ## License
 
