@@ -6,3 +6,4 @@ node_modules/
 frontend/node_modules/
 frontend/workable.js
 worker.py
+.pytest_cache/
