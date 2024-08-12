@@ -97,8 +97,10 @@ def generate_erd():
 
         return jsonify(erd_data)
     except SalesforceAuthenticationFailed as e:
+        print(f"Salesforce authentication failed: {e}")
         return jsonify({"success": False, "error": "Salesforce authentication failed", "message": str(e)}), 401
     except Exception as e:
+        print(f"Error generating ERD: {e}")  # Log the error for debugging
         return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/<path:path>', methods=['GET'])
