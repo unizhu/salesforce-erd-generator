@@ -107,8 +107,11 @@ Access the application in your web browser by navigating to:
 1. Pull & Run the Docker Image:
 
     ```bash
+
         docker pull unizhu/salesforce-erd-generator
-        docker run -p 8082:8082 unizhu/salesforce-erd-generator
+
+        docker run -p 8082:8082 --name sf-erd-generator-container unizhu/salesforce-erd-generator
+        
     ```
 
 2. Access the application in your web browser by navigating to:
