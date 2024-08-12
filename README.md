@@ -6,6 +6,10 @@ The salesforce native ERD tool is powerful but lacks the ability to export SVG o
 
 This repo is a web-based application built with Flask for the backend and React for the frontend. The application allows users to log in to their Salesforce account, select objects, and generate Entity-Relationship Diagrams (ERDs) based on the selected objects. The diagrams can be exported as SVG or PNG files.
 
+:coffee: CI/CD Status:
+
+![CI/CD](https://github.com/unizhu/salesforce-erd-generator/actions/workflows/ci.yml/badge.svg)
+
 ## Table of Contents
 
 - [Salesforce ER Diagram Generator](#salesforce-er-diagram-generator)

@@ -1,7 +1,7 @@
 __pycache__/
 .vscode/
 .DS_Store
-worker.py
+workable.py
 node_modules/
 frontend/node_modules/
 frontend/workable.js

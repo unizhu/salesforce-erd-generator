@@ -1,11 +1,8 @@
-/*
-Author: Uni Zhu @ NTTDATA
-*/
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { Button, Select, Input, Space, message, Form, Checkbox } from "antd";
 import mermaid from "mermaid";
-import { UpOutlined, DownOutlined } from "@ant-design/icons";
+import { UpOutlined, DownOutlined, UndoOutlined, RedoOutlined } from "@ant-design/icons";
 import logo from "./nttdata.png";
 
 const { Option } = Select;
@@ -31,6 +28,9 @@ const App = () => {
   const [selectedFieldObject, setSelectedFieldObject] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [fieldLimit, setFieldLimit] = useState(5); // Default to 5
+  const [erdHistory, setErdHistory] = useState([]);
+  const [currentErdIndex, setCurrentErdIndex] = useState(-1);
+
 
   const mermaidDivRef = useRef(null);
 
@@ -183,6 +183,33 @@ const App = () => {
     }
   };
 
+  const updateErdData = (newErdData) => {
+    setErdData(newErdData);
+    setErdHistory(prevHistory => {
+      const newHistory = prevHistory.slice(0, currentErdIndex + 1);
+      newHistory.push(newErdData);
+      return newHistory;
+    });
+    setCurrentErdIndex(prevIndex => prevIndex + 1);
+  };
+
+
+  const handleUndo = () => {
+    if (currentErdIndex > 0) {
+      setCurrentErdIndex(prevIndex => prevIndex - 1);
+      setErdData(erdHistory[currentErdIndex - 1]);
+    }
+  };
+
+  const handleRedo = () => {
+    if (currentErdIndex < erdHistory.length - 1) {
+      setCurrentErdIndex(prevIndex => prevIndex + 1);
+      setErdData(erdHistory[currentErdIndex + 1]);
+    }
+  };
+
+
+
   const generateERD = async () => {
     setIsLoading(true);
     const instance_url = localStorage.getItem("instance_url");
@@ -201,11 +228,11 @@ const App = () => {
         }
       );
 
-      setErdData((prevData) => ({
-        ...prevData,
+      updateErdData({
         objects: [...response.data.objects, ...customObjects],
         relationships: response.data.relationships,
-      }));
+        annotations: erdData.annotations,
+      });
     } catch (error) {
       if (error.response && error.response.status === 401) {
         handleSessionExpired();
@@ -218,6 +245,7 @@ const App = () => {
     }
   };
 
+
   const handleAddCustomObject = () => {
     if (newObjectName.trim()) {
       const newObj = {
@@ -225,19 +253,20 @@ const App = () => {
         fields: [],
         isCustom: true,
       };
-      setCustomObjects((prevObjects) => {
-        const updatedObjects = [...prevObjects, newObj];
-        setSelectedFieldObject(newObjectName);
-        return updatedObjects;
+      const updatedCustomObjects = [...customObjects, newObj];
+      setCustomObjects(updatedCustomObjects);
+      setSelectedFieldObject(newObjectName);
+      setSelectedObjects(prevSelected => [...prevSelected, newObjectName]);
+
+      updateErdData({
+        ...erdData,
+        objects: [...erdData.objects, newObj],
       });
-      setSelectedObjects((prevSelected) => [...prevSelected, newObjectName]);
-      setErdData((prevData) => ({
-        ...prevData,
-        objects: [...prevData.objects, newObj],
-      }));
+
       setNewObjectName("");
     }
   };
+
 
   const handleAddCustomField = () => {
     if (newFieldName.trim() && selectedFieldObject) {
@@ -248,7 +277,7 @@ const App = () => {
             {
               name: newFieldName,
               type: newFieldType,
-              referenceTo: newFieldRelation ? [newFieldRelation] : [],
+              referenceTo: newFieldType === "reference" ? [newFieldRelation] : [],
             },
           ];
           return { ...obj, fields: updatedFields };
@@ -256,24 +285,20 @@ const App = () => {
         return obj;
       });
 
-      setErdData((prevData) => ({
-        ...prevData,
-        objects: updatedObjects,
-      }));
-
+      let updatedRelationships = [...erdData.relationships];
       if (newFieldType === "reference" && newFieldRelation) {
-        setErdData((prevData) => ({
-          ...prevData,
-          relationships: [
-            ...prevData.relationships,
-            {
-              from: selectedFieldObject,
-              to: newFieldRelation,
-              type: newFieldName,
-            },
-          ],
-        }));
+        updatedRelationships.push({
+          from: selectedFieldObject,
+          to: newFieldRelation,
+          type: newFieldName,
+        });
       }
+
+      updateErdData({
+        ...erdData,
+        objects: updatedObjects,
+        relationships: updatedRelationships,
+      });
 
       setNewFieldName("");
       setNewFieldType("string");
@@ -281,15 +306,17 @@ const App = () => {
     }
   };
 
+
   const handleAddAnnotation = () => {
     if (newAnnotation.trim()) {
-      setErdData((prevData) => ({
-        ...prevData,
-        annotations: [...prevData.annotations, { text: newAnnotation }],
-      }));
+      updateErdData({
+        ...erdData,
+        annotations: [...erdData.annotations, { text: newAnnotation }],
+      });
       setNewAnnotation("");
     }
   };
+
 
   const handleExport = () => {
     if (!mermaidDivRef.current) {
@@ -442,7 +469,7 @@ const App = () => {
                   Show relationships with non-selected objects
                 </Checkbox>
               </Space>
-              <Space style={{marginRight:`15px`,marginLeft:`15px`}}>|</Space>
+              <Space style={{ marginRight: `15px`, marginLeft: `15px` }}>|</Space>
               <Space>
                 <Form.Item name="fieldLimit" label="Field Limit">
                   <Select
@@ -476,7 +503,7 @@ const App = () => {
               />
               <Button onClick={handleAddCustomObject}>Add Object</Button>
             </Space>
-            <Space style={{ marginLeft: "15px",marginRight: "15px" }}> | </Space>
+            <Space style={{ marginLeft: "15px", marginRight: "15px" }}> | </Space>
             <Space style={{ marginBottom: "20px" }}>
               <Input
                 value={newFieldName}
@@ -553,11 +580,27 @@ const App = () => {
           {erdData && (
             <div>
               <Space style={{ marginBottom: "20px" }}>
-                <Button onClick={handleExport}>Export as SVG</Button>
+                <Button onClick={handleExport} style={{ color: `blue` }}>Export as SVG</Button>
                 <Button onClick={handleExportAsPNG}>Export as PNG</Button>
+                <Button
+                  onClick={handleUndo}
+                  disabled={currentErdIndex <= 0}
+                  icon={<UndoOutlined />}
+                >
+                  Undo
+                </Button>
+                <Button
+                  onClick={handleRedo}
+                  disabled={currentErdIndex >= erdHistory.length - 1}
+                  icon={<RedoOutlined />}
+                >
+                  Redo
+                </Button>
                 <Button onClick={handleZoomIn}>Zoom In</Button>
                 <Button onClick={handleZoomOut}>Zoom Out</Button>
                 <Button onClick={handleResetZoom}>Reset Zoom</Button>
+
+
               </Space>
               <div
                 style={{
